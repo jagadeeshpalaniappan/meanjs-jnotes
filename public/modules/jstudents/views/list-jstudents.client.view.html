@@ -1,0 +1,32 @@
+
+
+<section data-ng-controller="JStudentsController" data-ng-init="find()">
+
+
+	<div class="page-header">
+		<h1>Students</h1>
+	</div>
+
+
+	<div class="list-group">
+
+		<a data-ng-repeat="jstudent in jstudents" data-ng-href="#!/jstudents/{{jstudent._id}}" class="list-group-item">
+			<small class="list-group-item-text">
+				Posted on
+				<span data-ng-bind="jstudent.created | date:'mediumDate'"></span>
+				by
+				<span data-ng-bind="jstudent.user.displayName"></span>
+			</small>
+			<h4 class="list-group-item-heading" data-ng-bind="jstudent.title"></h4>
+			<p class="list-group-item-text" data-ng-bind="jstudent.content"></p>
+		</a>
+
+	</div>
+
+
+	<div class="alert alert-warning text-center" data-ng-if="articles.$resolved && !articles.length">
+		No Students yet, why don't you <a href="/#!/jstudents/create">create one</a>?
+	</div>
+
+
+</section>

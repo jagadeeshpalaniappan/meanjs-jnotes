@@ -1,0 +1,27 @@
+<section data-ng-controller="JStudentsController" data-ng-init="findOne()">
+
+	<div class="page-header">
+		<h1 data-ng-bind="jstudent.title"></h1>
+	</div>
+
+
+	<div class="pull-right" data-ng-show="authentication.user._id == jstudent.user._id">
+		<a class="btn btn-primary" href="/#!/jstudents/{{jstudent._id}}/edit">
+			<i class="glyphicon glyphicon-edit"></i>
+		</a>
+		<a class="btn btn-primary" data-ng-click="remove();">
+			<i class="glyphicon glyphicon-trash"></i>
+		</a>
+	</div>
+	<small>
+		<em class="text-muted">
+			Posted on
+			<span data-ng-bind="jstudent.created | date:'mediumDate'"></span>
+			by
+			<span data-ng-bind="jstudent.user.displayName"></span>
+		</em>
+	</small>
+
+	<p class="lead" data-ng-bind="jstudent.content"></p>
+
+</section>
