@@ -1,52 +1,132 @@
 'use strict';
 
+
+
+//--------------------------------- 1. [APP-CONFIGURATION]----------------------------------------------
+
 // Init the application configuration module for AngularJS application
 var ApplicationConfiguration = (function() {
+
 	// Init module configuration options
 	var applicationModuleName = 'mean';
 	var applicationModuleVendorDependencies = ['ngResource', 'ngAnimate', 'ui.router', 'ui.bootstrap', 'ui.utils'];
 
+
+
+
+
+	/*
+	*	registerModule helper function
+	*		// 1. Create angular module
+	*		// 2. Add the [CUSTOM] [MODULES] into [APP] [MAIN] [MODULE]	--as dependency
+	*
+	*	Note:
+	*		-- [APP][MAIN][MODULE] is the only main angular module in the application which has all the [CUSTOM][MODULES] as dependency in order to work
+	*		-- [CUSTOM][MODULES] is nothing but 'public/modules/folder123'
+	*
+	* */
+
 	// Add a new vertical module
 	var registerModule = function(moduleName, dependencies) {
-		// Create angular module
+
+		//E.g.
+		// moduleName = 'users'
+		// dependencies = ['ui-bootstrap','some-plugin']
+
+
+		// 1. Create angular module  //Registering each [CUSTOM] [MODULE] with angular
+		// angular.module('users', ['ui-bootstrap','some-plugin']);
 		angular.module(moduleName, dependencies || []);
 
-		// Add the module to the AngularJS configuration file
+
+
+		// 2. Add the [CUSTOM] [MODULES] into [APP] [MAIN] [MODULE]	--as dependency
+		// angular.module('mean', [....,'users']);
 		angular.module(applicationModuleName).requires.push(moduleName);
+
+
 	};
+
+
+
 
 	return {
 		applicationModuleName: applicationModuleName,
 		applicationModuleVendorDependencies: applicationModuleVendorDependencies,
 		registerModule: registerModule
 	};
+
+
 })();
+
 'use strict';
+
+
+//------------------------------2. [ANGULAR][APP][MAIN][MODULE] ---------------------------------------
+//angular.module('mean', [.....]);
 
 //Start by defining the main module and adding the module dependencies
 angular.module(ApplicationConfiguration.applicationModuleName, ApplicationConfiguration.applicationModuleVendorDependencies);
 
+
+
+
+
 // Setting HTML5 Location Mode
-angular.module(ApplicationConfiguration.applicationModuleName).config(['$locationProvider',
-	function($locationProvider) {
-		$locationProvider.hashPrefix('!');
-	}
-]);
+// http://localhost:3000/#!/   --> prefixed with !
+
+angular.module(ApplicationConfiguration.applicationModuleName)
+		.config(['$locationProvider',
+						function($locationProvider) {
+							$locationProvider.hashPrefix('!');
+						}
+					]);
+
+
+
+
+
+//------------------------------3. [ANGULAR][APP][INIT]/[BOOTSTRAP] ---------------------------------------
 
 //Then define the init function for starting up the application
 angular.element(document).ready(function() {
-	//Fixing facebook bug with redirect
-	if (window.location.hash === '#_=_') window.location.hash = '#!';
 
-	// Fixing google bug with redirect
-	if (window.location.href[window.location.href.length - 1] === '#' &&
-			// for just the error url (origin + /#)
-			(window.location.href.length - window.location.origin.length) === 2) {
-			window.location.href = window.location.origin + '/#!';
-	}
+	// 3.0 FIXING BUGS -or- WORK AROUND  --before angular initialization (thatsy we r doing manual initialization)
+			//Fixing facebook bug with redirect
+			if (window.location.hash === '#_=_') window.location.hash = '#!';
 
-	//Then init the app
+			// Fixing google bug with redirect
+			if (window.location.href[window.location.href.length - 1] === '#' &&
+					// for just the error url (origin + /#)
+					(window.location.href.length - window.location.origin.length) === 2) {
+					window.location.href = window.location.origin + '/#!';
+			}
+
+
+
+	// 3.1. Manual Initialization  --If you need to have more control over the initialization process
 	angular.bootstrap(document, [ApplicationConfiguration.applicationModuleName]);
+
+
+	/*
+		How 'Automatic Initialization' works?  --Using ng-app
+			 <html ng-app="mean">
+			 </html>
+	 */
+
+	/*
+		1. Angular initializes automatically
+			-when 'DOMContentLoaded' event
+			-or when the angular.js script is evaluated if at that time document.readyState is set to 'complete'.
+
+
+		 2. Angular looks for the 'ngApp' directive in your HTML application root.
+		 	If the ngApp directive is found then Angular will:
+				3. load the 'module' associated with the directive
+				4. create the application 'injector'
+				5. 'compile' the DOM treating the ngApp directive as the root of the compilation.
+					-This allows you to tell it to treat only a portion of the DOM as an Angular application.
+	*/
 });
 
 'use strict';
@@ -59,6 +139,26 @@ ApplicationConfiguration.registerModule('articles');
 // Use Application configuration module to register a new module
 ApplicationConfiguration.registerModule('core');
 
+
+// 1. Register a new angular module
+
+// 2. Add the this 'core' [CUSTOM] [MODULES] into [APP] [MAIN] [MODULE]	--as dependency
+
+/**
+ * 1. Create 'new module' folder (jstudent)   //Register your new module 'jstudent' with angular & adding this new module as dependency in [APP] [MODULE]
+ * 2. Create jstudent.client.module.js
+ * 3. Create 'config' folder
+ * 		3.1 Create 'jstudents.client.config.js'
+ * 		3.2 Create 'jstudents.client.routes.js'
+ *
+ * 4. Create 'controllers' , 'views', 'services' folder
+ *
+ */
+
+
+
+ApplicationConfiguration.registerModule('jstudents');
+
 'use strict';
 
 // Use Application configuration module to register a new module
@@ -68,12 +168,21 @@ ApplicationConfiguration.registerModule('users');
 // Configuring the Articles module
 angular.module('articles').run(['Menus',
 	function(Menus) {
+
+		//addMenuItem(menuId, menuItemTitle, menuItemURL, menuItemType, menuItemUIRoute, isPublic, roles, position)
+		//addSubMenuItem(menuId, rootMenuItemURL, menuItemTitle, menuItemURL, menuItemUIRoute, isPublic, roles, position)
+
+
 		// Set top bar menu items
+
+		//Articles
 		Menus.addMenuItem('topbar', 'Articles', 'articles', 'dropdown', '/articles(/create)?');
 		Menus.addSubMenuItem('topbar', 'articles', 'List Articles', 'articles');
 		Menus.addSubMenuItem('topbar', 'articles', 'New Article', 'articles/create');
+
 	}
 ]);
+
 'use strict';
 
 // Setting up route
@@ -172,6 +281,8 @@ angular.module('articles').controller('ArticlesController', ['$scope', '$statePa
 //Articles service used for communicating with the articles REST endpoints
 angular.module('articles').factory('Articles', ['$resource',
 	function($resource) {
+
+
 		return $resource('articles/:articleId', {
 			articleId: '@_id'
 		}, {
@@ -179,15 +290,23 @@ angular.module('articles').factory('Articles', ['$resource',
 				method: 'PUT'
 			}
 		});
+
+
+
 	}
 ]);
+
 'use strict';
 
 // Setting up route
 angular.module('core').config(['$stateProvider', '$urlRouterProvider',
 	function($stateProvider, $urlRouterProvider) {
+
+
 		// Redirect to home view when route not found
 		$urlRouterProvider.otherwise('/');
+
+
 
 		// Home state routing
 		$stateProvider.
@@ -195,15 +314,30 @@ angular.module('core').config(['$stateProvider', '$urlRouterProvider',
 			url: '/',
 			templateUrl: 'modules/core/views/home.client.view.html'
 		});
+
+
+
 	}
 ]);
+
 'use strict';
 
 angular.module('core').controller('HeaderController', ['$scope', 'Authentication', 'Menus',
 	function($scope, Authentication, Menus) {
+
+		// This provides Authentication context.
 		$scope.authentication = Authentication;
-		$scope.isCollapsed = false;
+
+
+		// Getting all the Menus mapped with the User
 		$scope.menu = Menus.getMenu('topbar');
+
+
+		console.log($scope.menu);
+
+
+		//---------------Collapse Menu--------------------
+		$scope.isCollapsed = false;
 
 		$scope.toggleCollapsibleMenu = function() {
 			$scope.isCollapsed = !$scope.isCollapsed;
@@ -213,17 +347,25 @@ angular.module('core').controller('HeaderController', ['$scope', 'Authentication
 		$scope.$on('$stateChangeSuccess', function() {
 			$scope.isCollapsed = false;
 		});
+
+
+
 	}
 ]);
+
 'use strict';
 
 
 angular.module('core').controller('HomeController', ['$scope', 'Authentication',
 	function($scope, Authentication) {
+
 		// This provides Authentication context.
 		$scope.authentication = Authentication;
+
+
 	}
 ]);
+
 'use strict';
 
 //Menu service used for managing  menus
@@ -392,15 +534,182 @@ angular.module('core').service('Menus', [
 ]);
 'use strict';
 
+// Configuring the Articles module
+angular.module('jstudents').run(['Menus',
+	function(Menus) {
+
+
+		//addMenuItem(menuId, menuItemTitle, menuItemURL, menuItemType, menuItemUIRoute, isPublic, roles, position)
+		//addSubMenuItem(menuId, rootMenuItemURL, menuItemTitle, menuItemURL, menuItemUIRoute, isPublic, roles, position)
+
+
+		//Students
+		Menus.addMenuItem('topbar', 'Students', 'students', 'dropdown', '/jstudents(/create)?');
+		Menus.addSubMenuItem('topbar', 'students', 'List Students', 'jstudents');
+		Menus.addSubMenuItem('topbar', 'students', 'New Student', 'jstudents/create');
+
+	}
+]);
+
+'use strict';
+
+// Setting up route
+angular.module('jstudents').config(['$stateProvider',
+	function($stateProvider) {
+
+		//Registering the Routes with $stateProvider (--part of ui-router)
+
+		// Articles state routing
+		$stateProvider.
+			state('listJStudents', {
+				url: '/jstudents',
+				templateUrl: 'modules/jstudents/views/list-jstudents.client.view.html'
+			}).
+			state('createJStudent', {
+				url: '/jstudents/create',
+				templateUrl: 'modules/jstudents/views/create-jstudent.client.view.html'
+			}).
+			state('viewJStudent', {
+				url: '/jstudents/:jstudentId',
+				templateUrl: 'modules/jstudents/views/view-jstudent.client.view.html'
+			}).
+			state('editJStudent', {
+				url: '/jstudents/:jstudentId/edit',
+				templateUrl: 'modules/jstudents/views/edit-jstudent.client.view.html'
+			});
+
+
+	}
+]);
+
+'use strict';
+
+// Articles controller
+angular.module('jstudents').controller('JStudentsController', ['$scope', '$stateParams', '$location', 'Authentication', 'JStudents',
+	function($scope, $stateParams, $location, Authentication, JStudents) {
+
+		$scope.authentication = Authentication;
+
+
+
+
+		// Create new JStudent
+		$scope.create = function() {
+			// Create new JStudent object
+			var jstudent = new JStudents({
+				title: this.title,
+				content: this.content
+			});
+
+			// Redirect after save
+			jstudent.$save(function(response) {
+				$location.path('jstudents/' + response._id);
+
+				// Clear form fields
+				$scope.title = '';
+				$scope.content = '';
+			}, function(errorResponse) {
+				$scope.error = errorResponse.data.message;
+			});
+		};
+
+
+
+
+		// Remove existing JStudent
+		$scope.remove = function(jstudent) {
+			if (jstudent) {
+				jstudent.$remove();
+
+				for (var i in $scope.jstudents) {
+					if ($scope.jstudents[i] === jstudent) {
+						$scope.jstudents.splice(i, 1);
+					}
+				}
+			} else {
+				$scope.jstudent.$remove(function() {
+					$location.path('jstudents');
+				});
+			}
+		};
+
+
+
+
+		// Update existing JStudent
+		$scope.update = function() {
+			var jstudent = $scope.jstudent;
+
+			jstudent.$update(function() {
+				$location.path('jstudents/' + jstudent._id);
+			}, function(errorResponse) {
+				$scope.error = errorResponse.data.message;
+			});
+		};
+
+
+
+
+		// Find a list of JStudents
+		$scope.find = function() {
+			$scope.jstudents = JStudents.query();
+		};
+
+
+
+
+		// Find existing JStudent
+		$scope.findOne = function() {
+
+			$scope.jstudent = JStudents.get({
+				jstudentId: $stateParams.jstudentId
+			});
+		};
+
+
+
+	}
+]);
+
+'use strict';
+
+//Articles service used for communicating with the articles REST endpoints
+angular.module('articles').factory('JStudents', ['$resource',
+	function($resource) {
+
+
+		return $resource('jstudents/:jstudentId', {
+			jstudentId: '@_id'
+		}, {
+			update: {
+				method: 'PUT'
+			}
+		});
+
+
+
+	}
+]);
+
+'use strict';
+
 // Config HTTP Error Handling
 angular.module('users').config(['$httpProvider',
 	function($httpProvider) {
+
+
+
 		// Set the httpProvider "not authorized" interceptor
 		$httpProvider.interceptors.push(['$q', '$location', 'Authentication',
 			function($q, $location, Authentication) {
+
+
 				return {
 					responseError: function(rejection) {
+
+
 						switch (rejection.status) {
+
 							case 401:
 								// Deauthenticate the global user
 								Authentication.user = null;
@@ -408,97 +717,160 @@ angular.module('users').config(['$httpProvider',
 								// Redirect to signin page
 								$location.path('signin');
 								break;
+
+
 							case 403:
-								// Add unauthorized behaviour 
+								// Add unauthorized behaviour
 								break;
+
 						}
 
+
+
+
 						return $q.reject(rejection);
+
+
 					}
 				};
+
+
+
 			}
+
+
+
+
 		]);
 	}
 ]);
+
 'use strict';
 
 // Setting up route
 angular.module('users').config(['$stateProvider',
 	function($stateProvider) {
+
+
+
 		// Users state routing
 		$stateProvider.
 		state('profile', {
 			url: '/settings/profile',
 			templateUrl: 'modules/users/views/settings/edit-profile.client.view.html'
 		}).
+
 		state('password', {
 			url: '/settings/password',
 			templateUrl: 'modules/users/views/settings/change-password.client.view.html'
 		}).
+
 		state('accounts', {
 			url: '/settings/accounts',
 			templateUrl: 'modules/users/views/settings/social-accounts.client.view.html'
 		}).
+
 		state('signup', {
 			url: '/signup',
 			templateUrl: 'modules/users/views/authentication/signup.client.view.html'
 		}).
+
+
 		state('signin', {
 			url: '/signin',
 			templateUrl: 'modules/users/views/authentication/signin.client.view.html'
 		}).
+
+
 		state('forgot', {
 			url: '/password/forgot',
 			templateUrl: 'modules/users/views/password/forgot-password.client.view.html'
 		}).
+
+
 		state('reset-invalid', {
 			url: '/password/reset/invalid',
 			templateUrl: 'modules/users/views/password/reset-password-invalid.client.view.html'
 		}).
+
+
 		state('reset-success', {
 			url: '/password/reset/success',
 			templateUrl: 'modules/users/views/password/reset-password-success.client.view.html'
 		}).
+
+
 		state('reset', {
 			url: '/password/reset/:token',
 			templateUrl: 'modules/users/views/password/reset-password.client.view.html'
 		});
+
+
+
 	}
 ]);
+
 'use strict';
 
 angular.module('users').controller('AuthenticationController', ['$scope', '$http', '$location', 'Authentication',
 	function($scope, $http, $location, Authentication) {
+
+
 		$scope.authentication = Authentication;
 
 		// If user is signed in then redirect back home
 		if ($scope.authentication.user) $location.path('/');
 
+
+
+		//SignUp
 		$scope.signup = function() {
+
+
 			$http.post('/auth/signup', $scope.credentials).success(function(response) {
+
 				// If successful we assign the response to the global user model
 				$scope.authentication.user = response;
 
+
 				// And redirect to the index page
 				$location.path('/');
+
+
 			}).error(function(response) {
 				$scope.error = response.message;
 			});
+
+
 		};
 
+
+
+		//Sign In
 		$scope.signin = function() {
+
+
 			$http.post('/auth/signin', $scope.credentials).success(function(response) {
+
 				// If successful we assign the response to the global user model
 				$scope.authentication.user = response;
 
 				// And redirect to the index page
 				$location.path('/');
+
+
 			}).error(function(response) {
 				$scope.error = response.message;
 			});
+
+
 		};
+
+
+
 	}
 ]);
+
 'use strict';
 
 angular.module('users').controller('PasswordController', ['$scope', '$stateParams', '$http', '$location', 'Authentication',
@@ -618,10 +990,13 @@ angular.module('users').controller('SettingsController', ['$scope', '$http', '$l
 
 // Authentication service for user variables
 angular.module('users').factory('Authentication', ['$window', function($window) {
+
+
 	var auth = {
 		user: $window.user
 	};
-	
+
+
 	return auth;
 }]);
 
